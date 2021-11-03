@@ -17,7 +17,7 @@ dependencies:
 > conda activate AirflowEnv
 4. Follow all of the [Airflow run local](https://airflow.apache.org/docs/apache-airflow/stable/start/local.html)
     - Ensure you run airflow standalone at least once to seed it. 
-5. Copy all of the files from the dags directory to your airflow instance dags folder. You can also find this by running the command
+5. Drop the aiinfraexample folder into the dag folder. You can find this by running the command
 > airflow info
 ```
 Apache Airflow
