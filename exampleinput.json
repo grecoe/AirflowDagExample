@@ -1,0 +1,5 @@
+{
+    "identity" : "SP_OBJ_ID",
+    "tenent" : "SP_TENENT",
+    "secret" : "SP_SECRET" 
+}
