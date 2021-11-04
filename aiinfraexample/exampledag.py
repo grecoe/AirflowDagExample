@@ -13,7 +13,6 @@ from aiinfraexample.utils.virtenvtask import virtualenv_endpoint
 
 log = logging.getLogger(__name__)
 
-
 with DAG(
     dag_id='aiinfra_example',
     schedule_interval=None,
@@ -24,10 +23,23 @@ with DAG(
     params={"ai_infra_project": "initial_test"},
 ) as dag:
 
+    # Load config and set it up to persist context
     deploy_config = DeploymentConfiguration(os.path.split(__file__)[0], "exampleconf.json") 
+    deploy_config.update_config(
+        ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY,
+        os.path.split(__file__)[0]
+        )
 
+    # Persiste contect for virtual operator
+    persist_context_params_step = PythonOperator(
+        task_id='a_persist_context',
+        python_callable=Tasks.persist_context_params,
+        op_kwargs= deploy_config.get_config()
+    )  
+
+    # Virtual operator
     scan_storage_step = PythonVirtualenvOperator(
-        task_id="a_storage_scan",
+        task_id="b_storage_scan",
         python_callable=virtualenv_endpoint,
         requirements=[
             "azure-storage-blob==12.9.0",
@@ -38,26 +50,30 @@ with DAG(
         dag=dag
     )
 
+    # Non virtual operator 1
     next_settings = deploy_config.get_config(
         {
-            ConfigurationConstants.XCOM_TARGET : "a_storage_scan"
+            ConfigurationConstants.XCOM_TARGET : "b_storage_scan"
         }
     )
+
     process_step = PythonOperator(
-        task_id='b_process_storage',
+        task_id='c_process_storage',
         python_callable=Tasks.process_storage,
         op_kwargs= next_settings
     )    
 
+    # Non virtual operator 2
     next_settings = deploy_config.get_config(
         {
-            ConfigurationConstants.XCOM_TARGET : "b_process_storage"
+            ConfigurationConstants.XCOM_TARGET : "c_process_storage"
         }
     )
+
     store_step = PythonOperator(
-        task_id='c_store_results',
+        task_id='d_store_results',
         python_callable=Tasks.store_results,
         op_kwargs= next_settings
     )    
 
-    scan_storage_step >> process_step >> store_step
+    persist_context_params_step >> scan_storage_step >> process_step >> store_step

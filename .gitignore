@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+_dag_context_params.json
+
 # C extensions
 *.so
 

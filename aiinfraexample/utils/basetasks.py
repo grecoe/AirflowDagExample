@@ -1,5 +1,6 @@
 
 import json
+import os
 from pprint import pprint
 from aiinfraexample.utils.infraconfig import Configuration, ConfigurationConstants
 
@@ -34,6 +35,30 @@ class BaseTask:
 class Tasks:
 
     @staticmethod
+    def persist_context_params(**context):
+        print("Persist context params for PythonVirtualEnvOperator")
+
+        base_task = BaseTask(context)
+
+        context_params = base_task.configuration.to_json()
+
+        written = False
+        if context_params:
+            if ConfigurationConstants.DEPLOYMENT_PARAMS_FILE in base_task.deployment_settings and \
+               ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY in base_task.deployment_settings:
+                path = os.path.join(
+                    base_task.deployment_settings[ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY],
+                    base_task.deployment_settings[ConfigurationConstants.DEPLOYMENT_PARAMS_FILE],
+                )
+                with open(path, "w") as persisted_context:
+                    persisted_context.writelines(context_params)
+                
+                written = True
+
+        print("Context parameters have been written:", written)
+
+
+    @staticmethod
     def process_storage(**context):
         return_value = None
 
@@ -41,7 +66,7 @@ class Tasks:
 
         base_task = BaseTask(context)
         print("Configuration from DAG:")
-        pprint( base_task.configuration.__dict__)
+        pprint( base_task.configuration.to_json())
 
         print("Deployment Settings from JSON:")
         pprint( base_task.deployment_settings)
@@ -60,7 +85,7 @@ class Tasks:
 
         base_task = BaseTask(context)
         print("Configuration from DAG:")
-        pprint( base_task.configuration.__dict__)
+        pprint( base_task.configuration.to_json())
 
         print("Deployment Settings from JSON:")
         pprint( base_task.deployment_settings)

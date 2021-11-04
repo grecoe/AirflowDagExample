@@ -16,21 +16,50 @@ def virtualenv_endpoint(*args, **context):
     I cannot for the life of me figure out how to get teh context config/params to come into 
     a virtual env....so this might be a pointless exercise.
     """
+    import os
     import json
     from pprint import pprint
     from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
     DEPLOYMENT_SETTINGS = "deployment_info"
+    DEPLOYMENT_PARAMS_FILE = "params_file"
+    DEPLOYMENT_PARAMS_DIRECTORY = "params_folder"
 
+    """
+    This doesn't tell us much...other than the conext does not contain the original config
+    settings passed to the dag....but we do have a couple of things we can use. 
+    """
+    """
     print("Context:")
-    for think in context:
-        print(think)
-        pprint(context[think])
+    for thing in context:
+        print(thing)
+        pprint(context[thing])
+    """
 
-    print("Deployment settings from JSON")
+    deployment_settings = None
+    deployment_config = None
+
+    print("Deployment settings from JSON?")
     if DEPLOYMENT_SETTINGS in context:
-        pprint(context[DEPLOYMENT_SETTINGS])
-        
+        deployment_settings = context[DEPLOYMENT_SETTINGS]
+
+    if DEPLOYMENT_PARAMS_FILE in deployment_settings and DEPLOYMENT_PARAMS_DIRECTORY in deployment_settings:
+        file_path = os.path.join(deployment_settings[DEPLOYMENT_PARAMS_DIRECTORY], deployment_settings[DEPLOYMENT_PARAMS_FILE])
+        if os.path.exists(file_path):
+            with open(file_path, "r") as context_data:
+                content = context_data.readlines()
+                content = "\n".join(content)
+                deployment_config = json.loads(content)
+
+    
+    print("Virtual Environment")
+    print("Deploymnet settings")
+    pprint(deployment_settings)
+    print("Execution context")
+    pprint(deployment_config)
+
+
+
     payload = {
         "subscription" : "0000-00000-00000-00000",
         "storage_sas" : [

@@ -54,6 +54,13 @@ Other configuration comes from the DAG execution through a config, so
 - Access to the settings from the configuration json file
 - Access to the configuration object passed in the dag context as 'params'
 
+> November 4 -> Resolved
+1. Added in a file that will be generated at the root (with the dag) to exampleconf.json
+2. Introduce new task that runs prior to virtualenv task that writes out the context params to that file
+3. In virtualenv load up that file 
+
+Now the Virtual ENV has both the configuration.json settings as well as the context. 
+
 ### PythonVirtualEnvOperator
 - Access to the settings from the configuration json file ONLY
 

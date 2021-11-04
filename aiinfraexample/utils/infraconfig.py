@@ -11,6 +11,9 @@ class ConfigurationConstants:
     TASK_PARAMS = "params"
     DEPLOYMENT_SETTINGS = "deployment_info"
 
+    DEPLOYMENT_PARAMS_FILE = "params_file"
+    DEPLOYMENT_PARAMS_DIRECTORY = "params_folder"
+
 
 class Configuration:
     """
@@ -22,6 +25,11 @@ class Configuration:
             for param in context[ConfigurationConstants.TASK_PARAMS]:
                 setattr(self, param, context[ConfigurationConstants.TASK_PARAMS][param])
 
+    def to_json(self):
+        return_value = None
+        if len(self.__dict__):
+            return_value = json.dumps(self.__dict__)
+        return return_value
 
 class DeploymentConfiguration:
     def __init__(self, directory:str, config_file:str):
@@ -35,6 +43,10 @@ class DeploymentConfiguration:
                 content = settings.readlines()
                 content = "\n".join(content)
                 self.config_object = json.loads(content)
+
+    def update_config(self, field_name, field_value):
+        if self.config_object and isinstance(self.config_object, dict):
+            self.config_object[field_name] = field_value
 
     def get_config(self, optionals:dict = None):
         return_data = {ConfigurationConstants.DEPLOYMENT_SETTINGS : None}
