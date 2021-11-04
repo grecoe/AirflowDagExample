@@ -20,10 +20,17 @@ def virtualenv_endpoint(*args, **context):
     from pprint import pprint
     from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
+    DEPLOYMENT_SETTINGS = "deployment_info"
+
+    print("Context:")
     for think in context:
         print(think)
         pprint(context[think])
 
+    print("Deployment settings from JSON")
+    if DEPLOYMENT_SETTINGS in context:
+        pprint(context[DEPLOYMENT_SETTINGS])
+        
     payload = {
         "subscription" : "0000-00000-00000-00000",
         "storage_sas" : [

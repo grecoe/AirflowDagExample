@@ -1,22 +1,22 @@
 
 import json
 from pprint import pprint
-from aiinfraexample.utils.infraconfig import Configuration
+from aiinfraexample.utils.infraconfig import Configuration, ConfigurationConstants
 
 class BaseTask:
-    XCOM_TARGET = "xcom_target"
-    TASK_INSTANCE = "task_instance"
-    TASK_PARAMS = "params"
 
     def __init__(self, context):
         self.context = context
         self.configuration = Configuration(context)
+        self.deployment_settings = None
         self.xcom_target = None
         self.xcom_result = None
 
-        if BaseTask.TASK_INSTANCE in context and BaseTask.XCOM_TARGET in context:
-            self.xcom_target = context[BaseTask.XCOM_TARGET]
-            self.xcom_result = context[BaseTask.TASK_INSTANCE].xcom_pull(task_ids=context[BaseTask.XCOM_TARGET])
+        if ConfigurationConstants.TASK_INSTANCE in context and ConfigurationConstants.XCOM_TARGET in context:
+            self.xcom_target = context[ConfigurationConstants.XCOM_TARGET]
+            self.xcom_result = context[ConfigurationConstants.TASK_INSTANCE].xcom_pull(
+                task_ids=context[ConfigurationConstants.XCOM_TARGET]
+                )
 
             if self.xcom_result:
                 try:
@@ -24,6 +24,11 @@ class BaseTask:
                 except:
                     # Not a JSON object
                     pass
+
+        if ConfigurationConstants.DEPLOYMENT_SETTINGS in context:
+            self.deployment_settings = context[ConfigurationConstants.DEPLOYMENT_SETTINGS]
+            if isinstance(self.deployment_settings, str):
+                self.deployment_settings = json.loads(self.deployment_settings)
 
 
 class Tasks:
@@ -33,14 +38,20 @@ class Tasks:
         return_value = None
 
         print("In process storage")
+
         base_task = BaseTask(context)
-        print("Configuration", base_task.configuration.__dict__)
+        print("Configuration from DAG:")
+        pprint( base_task.configuration.__dict__)
+
+        print("Deployment Settings from JSON:")
+        pprint( base_task.deployment_settings)
 
         if base_task.xcom_target and base_task.xcom_result:
-            print("XCOM Target", base_task.xcom_target)
+            print("XCOM Target = ", base_task.xcom_target)
 
             print(json.dumps(base_task.xcom_result))
             return_value = json.dumps(base_task.xcom_result["storage_sas"])
+        
         return return_value
 
     @staticmethod
@@ -48,9 +59,13 @@ class Tasks:
         print("In store results")
 
         base_task = BaseTask(context)
-        print("Configuration", base_task.configuration.__dict__)
+        print("Configuration from DAG:")
+        pprint( base_task.configuration.__dict__)
+
+        print("Deployment Settings from JSON:")
+        pprint( base_task.deployment_settings)
 
         if base_task.xcom_target and base_task.xcom_result:
-            print("XCOM Target", base_task.xcom_target)
+            print("XCOM Target = ", base_task.xcom_target)
 
             print(json.dumps(base_task.xcom_result))

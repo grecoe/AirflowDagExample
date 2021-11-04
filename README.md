@@ -36,4 +36,24 @@ Look under aiinfraexample/exampledag.py, there are three tasks in there:
 1. A PythonVirtualEnvOperator that I'm still trying to figure out. 
 2. Two other PythonOperator that are just chained in there and use xcom to pass data from one to the next
 
+# Notes
+
+## PythonVirtualEnvOperator
+It appears that this virtual environment does not get access to the main task "params" field from the context as the standard PythonOperators do. 
+
+That is, you have to pass everything into it from the definition file. 
+
+Now, I'm not entirely sure we NEED to have any virtual envrironment tasks to begin with but I'm trying to figure out how to make this work. 
+
+## Loaded configuration
+As I worked through this, I came up with a pseudo solution in that certain configuration can be maintained in a local JSON file to the DAG.
+
+Other configuration comes from the DAG execution through a config, so
+
+### PythonOperator
+- Access to the settings from the configuration json file
+- Access to the configuration object passed in the dag context as 'params'
+
+### PythonVirtualEnvOperator
+- Access to the settings from the configuration json file ONLY
 

@@ -4,11 +4,15 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator, PythonVirtualenvOperator
 import logging
+import json 
+import os
 
 from aiinfraexample.utils.basetasks import Tasks
+from aiinfraexample.utils.infraconfig import DeploymentConfiguration, ConfigurationConstants
 from aiinfraexample.utils.virtenvtask import virtualenv_endpoint
 
 log = logging.getLogger(__name__)
+
 
 with DAG(
     dag_id='aiinfra_example',
@@ -20,6 +24,8 @@ with DAG(
     params={"ai_infra_project": "initial_test"},
 ) as dag:
 
+    deploy_config = DeploymentConfiguration(os.path.split(__file__)[0], "exampleconf.json") 
+
     scan_storage_step = PythonVirtualenvOperator(
         task_id="a_storage_scan",
         python_callable=virtualenv_endpoint,
@@ -27,19 +33,35 @@ with DAG(
             "azure-storage-blob==12.9.0",
             "azure-identity==1.7.0"
             ],
-        system_site_packages=False
+        system_site_packages=False,
+        op_kwargs= deploy_config.get_config(),
+        dag=dag
+    )
+
+    next_settings = deploy_config.get_config(
+        {
+            ConfigurationConstants.XCOM_TARGET : "a_storage_scan"
+        }
     )
 
     process_step = PythonOperator(
         task_id='b_process_storage',
         python_callable=Tasks.process_storage,
-        op_kwargs= {"xcom_target" : "a_storage_scan"}
+        op_kwargs= next_settings
+        #op_kwargs= {"xcom_target" : "a_storage_scan"}
     )    
+
+    next_settings = deploy_config.get_config(
+        {
+            ConfigurationConstants.XCOM_TARGET : "b_process_storage"
+        }
+    )
 
     store_step = PythonOperator(
         task_id='c_store_results',
         python_callable=Tasks.store_results,
-        op_kwargs= {"xcom_target" : "b_process_storage"}
+        op_kwargs= next_settings
+        #op_kwargs= {"xcom_target" : "b_process_storage"}
     )    
 
     scan_storage_step >> process_step >> store_step
