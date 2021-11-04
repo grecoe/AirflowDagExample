@@ -43,12 +43,10 @@ with DAG(
             ConfigurationConstants.XCOM_TARGET : "a_storage_scan"
         }
     )
-
     process_step = PythonOperator(
         task_id='b_process_storage',
         python_callable=Tasks.process_storage,
         op_kwargs= next_settings
-        #op_kwargs= {"xcom_target" : "a_storage_scan"}
     )    
 
     next_settings = deploy_config.get_config(
@@ -56,12 +54,10 @@ with DAG(
             ConfigurationConstants.XCOM_TARGET : "b_process_storage"
         }
     )
-
     store_step = PythonOperator(
         task_id='c_store_results',
         python_callable=Tasks.store_results,
         op_kwargs= next_settings
-        #op_kwargs= {"xcom_target" : "b_process_storage"}
     )    
 
     scan_storage_step >> process_step >> store_step
