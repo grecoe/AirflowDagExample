@@ -6,6 +6,10 @@ import os
 import json
 
 class ConfigurationConstants:
+    """
+    Constant configuration keys so that all tasks/process are talking the same
+    language to parse objects.
+    """
     XCOM_TARGET = "xcom_target"
     TASK_INSTANCE = "task_instance"
     TASK_PARAMS = "params"
@@ -32,6 +36,9 @@ class Configuration:
         return return_value
 
 class DeploymentConfiguration:
+    """
+    Wrapper for whatever JSON configuration file is going to be used across tasks/stages.
+    """
     def __init__(self, directory:str, config_file:str):
         self.directory = directory
         self.config_file = config_file

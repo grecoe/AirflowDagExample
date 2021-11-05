@@ -23,21 +23,31 @@ with DAG(
     params={"ai_infra_project": "initial_test"},
 ) as dag:
 
-    # Load config and set it up to persist context
+    """
+    Load the overall configuration JSON that will be passed along to each of the tasks 
+    through the op_kwargs field which will extend the context dictionary it recieves. 
+    """
     deploy_config = DeploymentConfiguration(os.path.split(__file__)[0], "exampleconf.json") 
     deploy_config.update_config(
         ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY,
         os.path.split(__file__)[0]
         )
 
-    # Persiste contect for virtual operator
+    """
+    Persist the  execution configuration (conext["params"]) to the file system becasue 
+    the PythonVirtualenvOperator does not currently recieve them through the context object 
+    it recieves. 
+    """
     persist_context_params_step = PythonOperator(
         task_id='a_persist_context',
         python_callable=Tasks.persist_context_params,
         op_kwargs= deploy_config.get_config()
     )  
 
-    # Virtual operator
+    """
+    The PythonVirtualenvOperator allows you to provde requirements for the environment. These
+    are things not installed by default in the Airflow environment. 
+    """
     scan_storage_step = PythonVirtualenvOperator(
         task_id="b_storage_scan",
         python_callable=virtualenv_endpoint,
@@ -50,30 +60,39 @@ with DAG(
         dag=dag
     )
 
-    # Non virtual operator 1
+    """
+    Create a PythonOperator and pass along the DeploymentConfiguration (json content), 
+    but extend it to identify it also needs the output of the previous task. This will
+    be loaded appropriately by the BaseTask class when this step executes.
+    """ 
     next_settings = deploy_config.get_config(
         {
             ConfigurationConstants.XCOM_TARGET : "b_storage_scan"
         }
     )
-
     process_step = PythonOperator(
         task_id='c_process_storage',
         python_callable=Tasks.process_storage,
         op_kwargs= next_settings
     )    
 
-    # Non virtual operator 2
+    """
+    Create a PythonOperator and pass along the DeploymentConfiguration (json content), 
+    but extend it to identify it also needs the output of the previous task. This will
+    be loaded appropriately by the BaseTask class when this step executes.
+    """ 
     next_settings = deploy_config.get_config(
         {
             ConfigurationConstants.XCOM_TARGET : "c_process_storage"
         }
     )
-
     store_step = PythonOperator(
         task_id='d_store_results',
         python_callable=Tasks.store_results,
         op_kwargs= next_settings
     )    
 
+    """
+    Now set the execution flow of the DAG
+    """
     persist_context_params_step >> scan_storage_step >> process_step >> store_step
