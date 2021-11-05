@@ -1,6 +1,27 @@
 # AirflowDagExample
 
-Example on how to use Airflow DAG on a Virtual Machine. 
+This example shows how to construct an Apache Airflow DAG out of PythonOperator and PythonVirtualenvOperator tasks. 
+
+## Overview
+
+![DAG flow](./images/dagflow.jpg)
+
+The example DAG is made up of 4 stages. 
+
+> Each of the stages utilizes the exampleconf.json file to show how that data can be shared across tasks in a DAG.<br><br>This might be where an author is storing general configuration to use across stages as it relates to thier environment.<br><br>The PythonVirtualEnvOperator does not have access to the configuration that is passed to the DAG at execution time. Of course, that will be critical information for the task to complete it's execution in most cases.<br><br>To resolve that, the example uses the first task to persist the execution parameters to disk which is then picked up by the PythonVirtualenvOperator task.  
+
+|Stage|Operator|Description|
+|----|----|---|
+|a_persist_context|PythonOperator|<ul><li>Recieves the content of the configuration which instructs where to persist the execution parameters.</li><li>Retrieves the execution parameters from the DAG context and writes them to the file system.</li><li>Returns nothing</li></ul>|
+|b_storage_scan|PythonVirtualEnvOperator|<ul><li>Recieves the content of the configuration which instructs where to read persisted execution parameters.</li><li>Performs it's main task</li><li>Returns a JSON serialized object to be consumed by the c_process_storage stage.</li></ul>|
+|c_process_storage|PythonOperator|<ul><li>Recieves the content of the configuration and also has access to the raw execution configuration</li><li>Performs it's main task</li><li>Returns a JSON serialized object to be consumed by the d_process_storage stage.</li></ul>|
+|d_store_results|PythonOperator|<ul><li>Recieves the content of the configuration and also has access to the raw execution configuration</li><li>Performs it's main task</li><li>Returns nothing</li></ul>|
+
+<sub>In the above steps there is really no "main task" to execute as they are all mock steps other than the persisting of the execution context. This was done intentionally as to not fill up the source files and confuse teh flow</sub>
+
+
+## Setup
+To test this example you will need to follow the instructions below. 
 
 1. Create a Virtual Machine in Azure (I chose the Ubuntu DSVM because it has a bunch of needed tools already installed)
 2. Create a conda environment with this environment file:
@@ -17,7 +38,7 @@ dependencies:
 > conda activate AirflowEnv
 4. Follow all of the [Airflow run local](https://airflow.apache.org/docs/apache-airflow/stable/start/local.html)
     - Ensure you run airflow standalone at least once to seed it. 
-5. Drop the aiinfraexample folder into the dag folder. You can find this by running the command
+5. Drop the aiinfraexample folder into the Airflow dag folder. You can find this by running the command
 > airflow info
 ```
 Apache Airflow
@@ -30,37 +51,10 @@ version                | 2.2.1
 
 > NOTE: When airflow is running you will not be able to create a file or folder under the dags folder. Simply shut it down and then create what you need. 
 
-# DAG Files
-Look under aiinfraexample/exampledag.py, there are three tasks in there:
+# Source Code
+The main DAG file is located at aiinfraexample/exampledag.py. 
 
-1. A PythonVirtualEnvOperator that I'm still trying to figure out. 
-2. Two other PythonOperator that are just chained in there and use xcom to pass data from one to the next
+This DAG is comprised of 4 tasks/stages each comprised of Python source you will find in the aiinfraexample/utils folder. 
 
-# Notes
-
-## PythonVirtualEnvOperator
-It appears that this virtual environment does not get access to the main task "params" field from the context as the standard PythonOperators do. 
-
-That is, you have to pass everything into it from the definition file. 
-
-Now, I'm not entirely sure we NEED to have any virtual envrironment tasks to begin with but I'm trying to figure out how to make this work. 
-
-## Loaded configuration
-As I worked through this, I came up with a pseudo solution in that certain configuration can be maintained in a local JSON file to the DAG.
-
-Other configuration comes from the DAG execution through a config, so
-
-### PythonOperator
-- Access to the settings from the configuration json file
-- Access to the configuration object passed in the dag context as 'params'
-
-> November 4 -> Resolved
-1. Added in a file that will be generated at the root (with the dag) to exampleconf.json
-2. Introduce new task that runs prior to virtualenv task that writes out the context params to that file
-3. In virtualenv load up that file 
-
-Now the Virtual ENV has both the configuration.json settings as well as the context. 
-
-### PythonVirtualEnvOperator
-- Access to the settings from the configuration json file ONLY
+The aiinfraexample/exampleconf.json is the base configuration that is passed to each of the task/stages from the main DAG file. 
 

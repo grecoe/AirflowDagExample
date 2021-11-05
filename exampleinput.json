@@ -1,5 +1,8 @@
 {
     "identity" : "SP_OBJ_ID",
     "tenent" : "SP_TENENT",
-    "secret" : "SP_SECRET" 
+    "secret" : "SP_SECRET",
+    "resources" : [
+        "current resources to attend to"
+    ] 
 }
