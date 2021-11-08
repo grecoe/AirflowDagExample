@@ -58,3 +58,4 @@ This DAG is comprised of 4 tasks/stages each comprised of Python source you will
 
 The aiinfraexample/exampleconf.json is the base configuration that is passed to each of the task/stages from the main DAG file. 
 
+### SIMPLE TEST
