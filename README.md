@@ -24,7 +24,7 @@ The example DAG is made up of 4 stages.
 To test this example you will need to follow the instructions below. 
 
 1. Create a Virtual Machine in Azure (I chose the Ubuntu DSVM because it has a bunch of needed tools already installed)
-2. Create a conda environment with this environment file:
+2. Create a conda environment with this environment file. It includes data from the public ODSU work done by Microsoft/Google and others:
 ```
 name: AirflowEnv
 channels:
@@ -33,7 +33,13 @@ dependencies:
   - python=3.9.2
   - pip==21.2.4
   - virtualenv
+  - azure-identity==1.5.0
+  - azure-keyvault-secrets==4.2.0
+  - azure-storage-blob
+  - azure-servicebus==7.0.1
+  - requests==2.25.1
 ```
+
 3. Activate the environment
 > conda activate AirflowEnv
 4. Follow all of the [Airflow run local](https://airflow.apache.org/docs/apache-airflow/stable/start/local.html)
@@ -51,14 +57,14 @@ version                | 2.2.1
 
 > NOTE: When airflow is running you will not be able to create a file or folder under the dags folder. Simply shut it down and then create what you need. 
 
-# Source Code
+## Source Code
 The main DAG file is located at aiinfraexample/exampledag.py. 
 
 This DAG is comprised of 4 tasks/stages each comprised of Python source you will find in the aiinfraexample/utils folder. 
 
 The aiinfraexample/exampleconf.json is the base configuration that is passed to each of the task/stages from the main DAG file. 
 
-# Open ODSU Info
+## Open ODSU Info
 
 [Chart YML](https://community.opengroup.org/osdu/platform/deployment-and-operations/infra-azure-provisioning/-/blob/master/charts/airflow/helm-config.yaml#L331) shows that the following are already in the environment...so include these in the AirFlow environment.
 
@@ -72,3 +78,21 @@ The aiinfraexample/exampleconf.json is the base configuration that is passed to 
         "pyyaml==5.4.1",
         "requests==2.25.1",
 ```
+# Credentials
+Testing this with multiple types of credentials.
+
+## Service Principal
+- Owner role on Subscription
+  - Provides access to list resources/ get storage keys
+- Storage Blob Data Contributor (storage account)
+  - Allows iterating containers/blobs in storage
+
+
+## User managed identity
+- Reader role (sub)
+  - Provides access to list resources 
+- Storage Account Contributor (Sub)
+  - Allow access to get keys from storage
+- Storage Blob Data Contributor (storage account)
+  - Allows iterating containers/blobs in storage
+
