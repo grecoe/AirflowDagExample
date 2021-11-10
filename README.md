@@ -58,4 +58,17 @@ This DAG is comprised of 4 tasks/stages each comprised of Python source you will
 
 The aiinfraexample/exampleconf.json is the base configuration that is passed to each of the task/stages from the main DAG file. 
 
-### SIMPLE TEST
+# Open ODSU Info
+
+[Chart YML](https://community.opengroup.org/osdu/platform/deployment-and-operations/infra-azure-provisioning/-/blob/master/charts/airflow/helm-config.yaml#L331) shows that the following are already in the environment...so include these in the AirFlow environment.
+
+```
+        "azure-identity==1.5.0",
+        "azure-keyvault-secrets==4.2.0",
+        "azure-storage-blob",
+        "azure-servicebus==7.0.1",
+        ...
+        "jsonschema==3.2.0",
+        "pyyaml==5.4.1",
+        "requests==2.25.1",
+```
