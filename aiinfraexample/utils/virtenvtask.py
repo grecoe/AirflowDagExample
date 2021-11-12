@@ -17,6 +17,8 @@ def virtualenv_endpoint(*args, **context):
     import os
     import json
     from pprint import pprint
+    # This does NOT work from a virtual environment so it has to be passed in. 
+    # from airflow.models import Variable
     from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
     """

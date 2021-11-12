@@ -3,6 +3,7 @@ import json
 import os
 from pprint import pprint
 from aiinfraexample.utils.infraconfig import Configuration, ConfigurationConstants
+from airflow.models import Variable
 
 class BaseTask:
     """
@@ -19,21 +20,25 @@ class BaseTask:
         self.context = context
         self.configuration = Configuration(context)
         self.deployment_settings = None
-        self.xcom_target = None
-        self.xcom_result = None
+        self.xcom_target = {}
 
         if ConfigurationConstants.TASK_INSTANCE in context and ConfigurationConstants.XCOM_TARGET in context:
-            self.xcom_target = context[ConfigurationConstants.XCOM_TARGET]
-            self.xcom_result = context[ConfigurationConstants.TASK_INSTANCE].xcom_pull(
-                task_ids=context[ConfigurationConstants.XCOM_TARGET]
-                )
+            targets = context[ConfigurationConstants.XCOM_TARGET]
+            if not isinstance(targets, list):
+                targets = [targets]
 
-            if self.xcom_result:
-                try:
-                    self.xcom_result = json.loads(self.xcom_result)
-                except:
-                    # Not a JSON object
-                    pass
+            for target in targets:
+                self.xcom_target[target] = context[ConfigurationConstants.TASK_INSTANCE].xcom_pull(
+                    task_ids=target
+                    )
+
+            if len(self.xcom_target):
+                for target in self.xcom_target:
+                    try:
+                        self.xcom_target[target] = json.loads(self.xcom_target[target])
+                    except:
+                        # Not a JSON object
+                        pass
 
         if ConfigurationConstants.DEPLOYMENT_SETTINGS in context:
             self.deployment_settings = context[ConfigurationConstants.DEPLOYMENT_SETTINGS]
@@ -89,6 +94,9 @@ class Tasks:
 
         print("In process storage")
 
+        #test_var = Variable.get("testvariable")
+        #print("Test variable is = ", test_var)
+
         """
         Create a BaseTask object that will parse the context and provide simple access to
         - The deployment information from the JSON file
@@ -102,11 +110,13 @@ class Tasks:
         print("Deployment Settings from JSON:")
         pprint( base_task.deployment_settings)
 
-        if base_task.xcom_target and base_task.xcom_result:
-            print("XCOM Target = ", base_task.xcom_target)
+        if len(base_task.xcom_target):
+            print("XCOM Target = ", json.dumps(base_task.xcom_target))
 
-            print(json.dumps(base_task.xcom_result))
-            return_value = json.dumps(base_task.xcom_result["storage_sas"])
+            # Expect to get a storage_sas from one of the x_com targets
+            for target in base_task.xcom_target:
+                if "storage_sas" in base_task.xcom_target[target]:
+                    return_value = json.dumps(base_task.xcom_target[target]["storage_sas"])
         
         """
         Return some data to be passed via xcom so that downstream tasks can work on the items. 
@@ -133,10 +143,8 @@ class Tasks:
         print("Deployment Settings from JSON:")
         pprint( base_task.deployment_settings)
 
-        if base_task.xcom_target and base_task.xcom_result:
-            print("XCOM Target = ", base_task.xcom_target)
-
-            print(json.dumps(base_task.xcom_result))
+        if len(base_task.xcom_target):
+            print("XCOM Target = ", json.dumps(base_task.xcom_target))
 
         """
         Returns nothing because this the end of the line...

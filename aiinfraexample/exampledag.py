@@ -1,15 +1,15 @@
+import logging
+import os
 from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator, PythonVirtualenvOperator
-import logging
-import json 
-import os
 
+from aiinfraexample import ProjectConfiguration
 from aiinfraexample.utils.basetasks import Tasks
 from aiinfraexample.utils.infraconfig import DeploymentConfiguration, ConfigurationConstants
 from aiinfraexample.utils.virtenvtask import virtualenv_endpoint
+from aiinfraexample.utils.azureclitask import az_cli_data_collection
+
 
 log = logging.getLogger(__name__)
 
@@ -27,11 +27,32 @@ with DAG(
     Load the overall configuration JSON that will be passed along to each of the tasks 
     through the op_kwargs field which will extend the context dictionary it recieves. 
     """
-    deploy_config = DeploymentConfiguration(os.path.split(__file__)[0], "exampleconf.json") 
+    deploy_config = DeploymentConfiguration(
+        os.path.split(__file__)[0], 
+        ProjectConfiguration.CONFIGURATION_FILE
+    )
+
     deploy_config.update_config(
         ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY,
         os.path.split(__file__)[0]
         )
+
+
+    """
+    Collect what you need from Azure CLI commands not present in 
+    other Python libraries. This can be grabbed from x_com as needed
+    except in another Virtual Env Operator.
+    """
+    cli_data_collection = PythonVirtualenvOperator(
+        task_id="cli_data_collection",
+        python_callable=az_cli_data_collection,
+        requirements=[
+            "azure-cli"
+            ],
+        system_site_packages=False,
+        op_kwargs= deploy_config.get_config(),
+        dag=dag
+    )
 
     """
     Persist the  execution configuration (conext["params"]) to the file system becasue 
@@ -67,7 +88,7 @@ with DAG(
     """ 
     next_settings = deploy_config.get_config(
         {
-            ConfigurationConstants.XCOM_TARGET : "b_storage_scan"
+            ConfigurationConstants.XCOM_TARGET : ["b_storage_scan", "cli_data_collection"]
         }
     )
     process_step = PythonOperator(
@@ -95,4 +116,4 @@ with DAG(
     """
     Now set the execution flow of the DAG
     """
-    persist_context_params_step >> scan_storage_step >> process_step >> store_step
+    cli_data_collection >> persist_context_params_step >> scan_storage_step >> process_step >> store_step

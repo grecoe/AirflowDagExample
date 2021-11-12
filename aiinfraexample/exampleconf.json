@@ -1,9 +1,11 @@
 {
-    "test" : "setting",
-    "deploy1" : "val1",
-    "deploy2" : "val2",
+    "overall" : "This file should have the settings for the system components the DAG needs to communication with",
 
-    "description" : "Using these below to pass to virtual env",
+    "subscription" : "AZURE_SUB_ID",
+    "cog_search" : "COG_SEARCH_INSTANCE_NAME",
+    "cog_search_rg" : "COG_SEARCH_RG_NAME",
+
+    "params_description" : "Settings used to serialize execution config for virtualenv things.",
     "params_file" : "_dag_context_params.json",
     "params_folder" : null
 }
