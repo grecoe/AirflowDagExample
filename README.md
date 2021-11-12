@@ -95,4 +95,5 @@ Testing this with multiple types of credentials.
   - Allow access to get keys from storage
 - Storage Blob Data Contributor (storage account)
   - Allows iterating containers/blobs in storage
-
+- Search Service Contributor
+  - List admin keys for search service.
