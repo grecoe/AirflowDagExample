@@ -58,11 +58,19 @@ with DAG(
     Persist the  execution configuration (conext["params"]) to the file system becasue 
     the PythonVirtualenvOperator does not currently recieve them through the context object 
     it recieves. 
+
+    We also can extend that with any other outputs from previous tasks since a virtual env
+    operator also does not have access to the main context object either. 
     """
+    next_settings = deploy_config.get_config(
+        {
+            ConfigurationConstants.XCOM_TARGET : "cli_data_collection"
+        }
+    )
     persist_context_params_step = PythonOperator(
         task_id='a_persist_context',
         python_callable=Tasks.persist_context_params,
-        op_kwargs= deploy_config.get_config()
+        op_kwargs= next_settings
     )  
 
     """

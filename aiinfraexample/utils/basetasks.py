@@ -66,7 +66,13 @@ class Tasks:
         """
         base_task = BaseTask(context)
 
-        context_params = base_task.configuration.to_json()
+        xcom_additions = None
+        if len(base_task.xcom_target):
+            xcom_additions = {}
+            for target in base_task.xcom_target:
+                xcom_additions[target] = base_task.xcom_target[target]
+
+        context_params = base_task.configuration.to_json(xcom_additions)
 
         written = False
         if context_params:

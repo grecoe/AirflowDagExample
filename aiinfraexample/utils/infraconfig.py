@@ -29,10 +29,15 @@ class Configuration:
             for param in context[ConfigurationConstants.TASK_PARAMS]:
                 setattr(self, param, context[ConfigurationConstants.TASK_PARAMS][param])
 
-    def to_json(self):
+    def to_json(self, additional:dict = None):
         return_value = None
-        if len(self.__dict__):
-            return_value = json.dumps(self.__dict__)
+
+        output = self.__dict__.copy()
+        if additional:
+            output.update(additional)
+
+        if len(output):
+            return_value = json.dumps(output)
         return return_value
 
 class DeploymentConfiguration:
