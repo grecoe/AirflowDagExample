@@ -10,16 +10,32 @@ class ConfigurationConstants:
     Constant configuration keys so that all tasks/process are talking the same
     language to parse objects.
     """
+    # START
+    # Sideloaded settings from JSON 
+    SIDELOAD_SETTINGS = "sideload_info"
+    PACKAGE_HOME = "package_home"
+    # Sideloaded fields expected to be there
+    DEPLOYMENT_SUBSCRIPTION = "subscription"
+    COGSRCH_INSTANCE = "cog_search"
+    COGSRCH_INSTANCE_RG = "cog_search_rg"
+    COGSRCH_INDEXER = "cog_search_indexer"
+    COGSRCH_INDEX = "cog_search_index"
+    COGSRCH_DATA_SRC = "cog_search_datasource"
+    COGSRCH_DATA_SRC_CTR = "cog_search_datasource_container"
+
+    # File used to pass context parameters to virtual env operators
+    DEPLOYMENT_PARAMS_FILE = "params_file"
+    DEPLOYMENT_PARAMS_DIRECTORY = "params_folder"
+    # END
+
+    # XCOM Related fields added to settings inbound
     XCOM_TARGET = "xcom_target"
     TASK_INSTANCE = "task_instance"
     TASK_PARAMS = "params"
-    DEPLOYMENT_SETTINGS = "deployment_info"
-
-    DEPLOYMENT_PARAMS_FILE = "params_file"
-    DEPLOYMENT_PARAMS_DIRECTORY = "params_folder"
 
 
-class Configuration:
+
+class AirflowContextConfiguration:
     """
     Generic configuraton object that loads the "params" from the 
     task context sent to non virtualenv python tasks. 
@@ -40,7 +56,7 @@ class Configuration:
             return_value = json.dumps(output)
         return return_value
 
-class DeploymentConfiguration:
+class SideLoadConfiguration:
     """
     Wrapper for whatever JSON configuration file is going to be used across tasks/stages.
     """
@@ -61,9 +77,9 @@ class DeploymentConfiguration:
             self.config_object[field_name] = field_value
 
     def get_config(self, optionals:dict = None):
-        return_data = {ConfigurationConstants.DEPLOYMENT_SETTINGS : None}
+        return_data = {ConfigurationConstants.SIDELOAD_SETTINGS : None}
         if self.config_object:
-            return_data[ConfigurationConstants.DEPLOYMENT_SETTINGS] = self.config_object.copy()
+            return_data[ConfigurationConstants.SIDELOAD_SETTINGS] = self.config_object.copy()
             if optionals and isinstance(optionals, dict):
                 return_data.update(optionals)
 

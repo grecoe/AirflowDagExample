@@ -25,19 +25,19 @@ def virtualenv_endpoint(*args, **context):
     Because we have no access to the ConfigurationConstants class, we have to duplicate the keys
     here for what we are looking for in the deployment information. 
     """
-    DEPLOYMENT_SETTINGS = "deployment_info"
+    SIDELOAD_SETTINGS = "sideload_info"
     DEPLOYMENT_PARAMS_FILE = "params_file"
     DEPLOYMENT_PARAMS_DIRECTORY = "params_folder"
 
-    deployment_settings = None
+    sideload_settings = None
     deployment_config = None
 
     """
     First, see if the context (extended kwargs) has the deployment information
     """
     print("Deployment settings from JSON?")
-    if DEPLOYMENT_SETTINGS in context:
-        deployment_settings = context[DEPLOYMENT_SETTINGS]
+    if SIDELOAD_SETTINGS in context:
+        sideload_settings = context[SIDELOAD_SETTINGS]
 
     """
     Second, see if the deployment information has information about where the execution
@@ -45,8 +45,8 @@ def virtualenv_endpoint(*args, **context):
 
     This is important because our task will likely need specific information about what to load.
     """
-    if DEPLOYMENT_PARAMS_FILE in deployment_settings and DEPLOYMENT_PARAMS_DIRECTORY in deployment_settings:
-        file_path = os.path.join(deployment_settings[DEPLOYMENT_PARAMS_DIRECTORY], deployment_settings[DEPLOYMENT_PARAMS_FILE])
+    if DEPLOYMENT_PARAMS_FILE in sideload_settings and DEPLOYMENT_PARAMS_DIRECTORY in sideload_settings:
+        file_path = os.path.join(sideload_settings[DEPLOYMENT_PARAMS_DIRECTORY], sideload_settings[DEPLOYMENT_PARAMS_FILE])
         if os.path.exists(file_path):
             with open(file_path, "r") as context_data:
                 content = context_data.readlines()
@@ -55,8 +55,8 @@ def virtualenv_endpoint(*args, **context):
 
     
     print("Virtual Environment")
-    print("Deploymnet settings")
-    pprint(deployment_settings)
+    print("Sideload settings")
+    pprint(sideload_settings)
     print("Execution context")
     pprint(deployment_config)
 

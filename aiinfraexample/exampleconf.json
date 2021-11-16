@@ -1,9 +1,13 @@
 {
     "overall" : "This file should have the settings for the system components the DAG needs to communication with",
 
-    "subscription" : "AZURE_SUB_ID",
-    "cog_search" : "COG_SEARCH_INSTANCE_NAME",
-    "cog_search_rg" : "COG_SEARCH_RG_NAME",
+    "subscription" : "YOUR_SUB_ID",
+    "cog_search" : "COG_SEARCH_INSTANCE",
+    "cog_search_rg" : "COG_SEARCH_RG",
+    "cog_search_indexer" : "INDEXER_NAME",
+    "cog_search_index" : "INDEX_NAME",
+    "cog_search_datasource" : "STORAGE_DATASOURCE",
+    "cog_search_datasource_container" : "STORAGE_DATASOURCE_CONTAINER",
 
     "params_description" : "Settings used to serialize execution config for virtualenv things.",
     "params_file" : "_dag_context_params.json",

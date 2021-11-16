@@ -2,8 +2,11 @@
 import json
 import os
 from pprint import pprint
-from aiinfraexample.utils.infraconfig import Configuration, ConfigurationConstants
-from airflow.models import Variable
+#from aiinfraexample.utils.infraconfig import Configuration, ConfigurationConstants
+from aiinfraexample.utils import (
+    AirflowContextConfiguration, 
+    ConfigurationConstants
+)
 
 class BaseTask:
     """
@@ -18,8 +21,8 @@ class BaseTask:
 
     def __init__(self, context):
         self.context = context
-        self.configuration = Configuration(context)
-        self.deployment_settings = None
+        self.configuration = AirflowContextConfiguration(context)
+        self.sideload_settings = None
         self.xcom_target = {}
 
         if ConfigurationConstants.TASK_INSTANCE in context and ConfigurationConstants.XCOM_TARGET in context:
@@ -40,10 +43,10 @@ class BaseTask:
                         # Not a JSON object
                         pass
 
-        if ConfigurationConstants.DEPLOYMENT_SETTINGS in context:
-            self.deployment_settings = context[ConfigurationConstants.DEPLOYMENT_SETTINGS]
-            if isinstance(self.deployment_settings, str):
-                self.deployment_settings = json.loads(self.deployment_settings)
+        if ConfigurationConstants.SIDELOAD_SETTINGS in context:
+            self.sideload_settings = context[ConfigurationConstants.SIDELOAD_SETTINGS]
+            if isinstance(self.sideload_settings, str):
+                self.sideload_settings = json.loads(self.sideload_settings)
 
 
 class Tasks:
@@ -76,11 +79,11 @@ class Tasks:
 
         written = False
         if context_params:
-            if ConfigurationConstants.DEPLOYMENT_PARAMS_FILE in base_task.deployment_settings and \
-               ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY in base_task.deployment_settings:
+            if ConfigurationConstants.DEPLOYMENT_PARAMS_FILE in base_task.sideload_settings and \
+               ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY in base_task.sideload_settings:
                 path = os.path.join(
-                    base_task.deployment_settings[ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY],
-                    base_task.deployment_settings[ConfigurationConstants.DEPLOYMENT_PARAMS_FILE],
+                    base_task.sideload_settings[ConfigurationConstants.DEPLOYMENT_PARAMS_DIRECTORY],
+                    base_task.sideload_settings[ConfigurationConstants.DEPLOYMENT_PARAMS_FILE],
                 )
                 with open(path, "w") as persisted_context:
                     persisted_context.writelines(context_params)
@@ -110,11 +113,11 @@ class Tasks:
         - The data passed from the previous task via xcom
         """
         base_task = BaseTask(context)
-        print("Configuration from DAG:")
+        print("Execution Configuration from DAG:")
         pprint( base_task.configuration.to_json())
 
-        print("Deployment Settings from JSON:")
-        pprint( base_task.deployment_settings)
+        print("Side Load Settings from JSON:")
+        pprint( base_task.sideload_settings)
 
         if len(base_task.xcom_target):
             print("XCOM Target = ", json.dumps(base_task.xcom_target))
@@ -146,8 +149,8 @@ class Tasks:
         print("Configuration from DAG:")
         pprint( base_task.configuration.to_json())
 
-        print("Deployment Settings from JSON:")
-        pprint( base_task.deployment_settings)
+        print("Side Load Settings from JSON:")
+        pprint( base_task.sideload_settings)
 
         if len(base_task.xcom_target):
             print("XCOM Target = ", json.dumps(base_task.xcom_target))
