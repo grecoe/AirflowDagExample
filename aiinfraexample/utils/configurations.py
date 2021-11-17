@@ -16,13 +16,12 @@ class ConfigurationConstants:
     PACKAGE_HOME = "package_home"
     # Sideloaded fields expected to be there
     DEPLOYMENT_SUBSCRIPTION = "subscription"
+    COGSRCH_API_VERSION = "cog_search_api_version"
     COGSRCH_INSTANCE = "cog_search"
     COGSRCH_INSTANCE_RG = "cog_search_rg"
     COGSRCH_INDEXER = "cog_search_indexer"
     COGSRCH_INDEX = "cog_search_index"
     COGSRCH_DATA_SRC = "cog_search_datasource"
-    COGSRCH_DATA_SRC_CTR = "cog_search_datasource_container"
-    COGSRCH_DATA_SRC_FLD = "cog_search_datasource_folder"
 
     # File used to pass context parameters to virtual env operators
     DEPLOYMENT_PARAMS_FILE = "params_file"
@@ -36,6 +35,11 @@ class ConfigurationConstants:
 
     # XCOM data passed
     UPLOAD_TARGET = "upload_target"
+    COGSRCH_ADMIN_KEY = "cog_search_key"
+    COGSRCH_DATA_SRC_ACC = "cog_search_datasource_account"
+    COGSRCH_DATA_SRC_CTR = "cog_search_datasource_container"
+    COGSRCH_DATA_SRC_FLD = "cog_search_datasource_folder"
+    COGSRCH_INDEXER_PROC_CNT = "cog_search_indexer_proc_count"
 
     # Execution Config Parameters
     SYSTEM_FILE_ID = "file_id" # Testing is blob name

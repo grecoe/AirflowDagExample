@@ -22,14 +22,14 @@ from aiinfraexample.utils import (
 # Cannot be in the above init file or it hoses the virtual environment thigs.
 from aiinfraexample.utils.task.storagetask import StorageTask
 # Have to be very thoughtful about how to bring in documents, particularly here in this file.
+from aiinfraexample.utils.task.cogsearchtask import CogSearchTask
 
-SIDELOAD_CONFIGURATION_FILE = "exampleconf.json"
-
-
-def dummy_task(**context):
-    return {ConfigurationConstants.UPLOAD_TARGET : os.path.join(os.path.split(__file__)[0], SIDELOAD_CONFIGURATION_FILE)}
+def mock_key_retrieval(**context):
+    return {ConfigurationConstants.COGSRCH_ADMIN_KEY : "MOCK_KEY_TEMP_"}
 
 log = logging.getLogger(__name__)
+
+SIDELOAD_CONFIGURATION_FILE = "exampleconf.json"
 
 with DAG(
     dag_id='aieng_example',
@@ -66,10 +66,28 @@ with DAG(
         dag_home
         )
 
+    # Get the key from cog search
+    get_search_key = PythonOperator(
+        task_id='0_get_search_key',
+        python_callable=mock_key_retrieval,
+        op_kwargs= sideload_config.get_config()
+    )  
+
+    # Get the storage info from cog search data source
+    settings = sideload_config.get_config(
+        {
+            ConfigurationConstants.XCOM_TARGET : "0_get_search_key"
+        }
+    )
+    get_datastore_details_task = PythonOperator(
+        task_id='1_get_datastore_info',
+        python_callable=CogSearchTask.get_datasource_details,
+        op_kwargs= settings
+    )  
 
     # Get teh file locally that we need
     retrieve_file_task = PythonOperator(
-        task_id='0_download_blob',
+        task_id='2_download_blob',
         python_callable=StorageTask.download_file_task,
         op_kwargs= sideload_config.get_config()
     )  
@@ -77,15 +95,29 @@ with DAG(
     # Upload the file to storage
     settings = sideload_config.get_config(
         {
-            ConfigurationConstants.XCOM_TARGET : "0_download_blob"
+            ConfigurationConstants.XCOM_TARGET : [
+                "1_get_datastore_info",
+                "2_download_blob",
+            ]
         }
     )
     upload_file_task = PythonOperator(
-        task_id='1_push_blob',
+        task_id='3_push_blob',
         python_callable=StorageTask.upload_file_task,
         op_kwargs= settings
     )  
-    # TESTING
+
+    # Trigger the indexer
+    settings = sideload_config.get_config(
+        {
+            ConfigurationConstants.XCOM_TARGET : "0_get_search_key"
+        }
+    )
+    trigger_indexer_task = PythonOperator(
+        task_id='4_trigger_indexer',
+        python_callable=CogSearchTask.trigger_indexer,
+        op_kwargs= settings
+    )  
 
 
 
@@ -179,4 +211,4 @@ with DAG(
     Now set the execution flow of the DAG
     """
     #dummy_dag_task >> test_storage_task >> cli_data_collection >> persist_context_params_step >> scan_storage_step >> process_step >> store_step
-    retrieve_file_task >> upload_file_task
+    get_search_key >> get_datastore_details_task >> retrieve_file_task >> upload_file_task >> trigger_indexer_task

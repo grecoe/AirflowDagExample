@@ -72,7 +72,7 @@ def az_cli_data_collection(*args, **context):
     return_data = {}
     key_result = CmdUtils.get_command_output(key_request, as_json=False)
     if key_result:
-        return_data["cog_search_key"] = key_result.strip()
+        return_data[ConfigurationConstants.COGSRCH_ADMIN_KEY] = key_result.strip()
 
     # Get anything else you need here.
     print("Returning...")

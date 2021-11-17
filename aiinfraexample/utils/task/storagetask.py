@@ -63,43 +63,44 @@ class StorageTask:
         base_task = BaseTask(context)
         base_task.summarize()
 
-        # Verify sideloaded settings
-        if ConfigurationConstants.COGSRCH_DATA_SRC not in base_task.sideload_settings or \
-            ConfigurationConstants.COGSRCH_DATA_SRC_CTR not in base_task.sideload_settings or \
-            ConfigurationConstants.COGSRCH_DATA_SRC_FLD not in base_task.sideload_settings:
-            raise Exception("Data source information is incomplete")
         
         # Validate we actually got a target
         local_file = base_task.find_xcom_target(ConfigurationConstants.UPLOAD_TARGET)
-        if not local_file:
-            raise Exception("Do not have an upload target")
+        storage_account = base_task.find_xcom_target(ConfigurationConstants.COGSRCH_DATA_SRC_ACC)
+        storage_folder = base_task.find_xcom_target(ConfigurationConstants.COGSRCH_DATA_SRC_FLD)
+        storage_container = base_task.find_xcom_target(ConfigurationConstants.COGSRCH_DATA_SRC_CTR)
 
-        
+        if not local_file or not storage_account or not storage_container:
+            raise Exception("Do not have an upload target, or missing storage information")
+
         file_name = os.path.split(local_file)[1]
-        blob_path = "{}{}".format(
-            base_task.sideload_settings[ConfigurationConstants.COGSRCH_DATA_SRC_FLD],
-            file_name
-        )
+        blob_path = file_name
+        if storage_folder:
+            if storage_folder[-1] != '/':
+                storage_folder += '/'
+
+            blob_path = "{}{}".format(
+                storage_folder,
+                file_name
+            )
 
 
         az_stg_utils = AzureStorageUtil(
-            base_task.sideload_settings[ConfigurationConstants.COGSRCH_DATA_SRC],
+            storage_account,
             DefaultAzureCredential()
         )
 
         # Delete if there (and create container if needed)
-        """
         print("Delete blob", blob_path)
         az_stg_utils.delete_process_file(
-            base_task.sideload_settings[ConfigurationConstants.COGSRCH_DATA_SRC_CTR],
+            storage_container,
             blob_path
         )
-        """
 
         # Upload what we have
         print("Uploading ", local_file)
         az_stg_utils.upload_process_file(
-            base_task.sideload_settings[ConfigurationConstants.COGSRCH_DATA_SRC_CTR],
+            storage_container,
             blob_path,
             local_file
         )
