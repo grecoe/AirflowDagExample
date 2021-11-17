@@ -2,7 +2,6 @@
 import json
 import os
 from pprint import pprint
-#from aiinfraexample.utils.infraconfig import Configuration, ConfigurationConstants
 from aiinfraexample.utils import (
     AirflowContextConfiguration, 
     ConfigurationConstants
@@ -48,6 +47,25 @@ class BaseTask:
             if isinstance(self.sideload_settings, str):
                 self.sideload_settings = json.loads(self.sideload_settings)
 
+    def find_xcom_target(self, field_name: str):
+        return_value = None
+        if len(self.xcom_target):
+            for target in self.xcom_target:
+                if isinstance(self.xcom_target[target], dict):
+                    if field_name in self.xcom_target[target]:
+                        return_value = self.xcom_target[target][field_name]
+                        break
+        return return_value
+
+    def summarize(self):
+        print("Execution Configuration from DAG:")
+        pprint( self.configuration.to_json())
+
+        print("Side Load Settings from JSON:")
+        pprint( self.sideload_settings)
+
+        print("XCOM Passed Data:")
+        pprint(self.xcom_target)
 
 class Tasks:
 
@@ -68,6 +86,7 @@ class Tasks:
         - The data passed from the previous task via xcom
         """
         base_task = BaseTask(context)
+        base_task.summarize()
 
         xcom_additions = None
         if len(base_task.xcom_target):
@@ -93,6 +112,7 @@ class Tasks:
         print("Context parameters have been written:", written)
 
 
+
     @staticmethod
     def process_storage(**context):
         """
@@ -103,9 +123,6 @@ class Tasks:
 
         print("In process storage")
 
-        #test_var = Variable.get("testvariable")
-        #print("Test variable is = ", test_var)
-
         """
         Create a BaseTask object that will parse the context and provide simple access to
         - The deployment information from the JSON file
@@ -113,20 +130,18 @@ class Tasks:
         - The data passed from the previous task via xcom
         """
         base_task = BaseTask(context)
-        print("Execution Configuration from DAG:")
-        pprint( base_task.configuration.to_json())
+        base_task.summarize()
 
-        print("Side Load Settings from JSON:")
-        pprint( base_task.sideload_settings)
+        return_value = base_task.find_xcom_target("storage_sas")
 
+        """
         if len(base_task.xcom_target):
-            print("XCOM Target = ", json.dumps(base_task.xcom_target))
-
             # Expect to get a storage_sas from one of the x_com targets
             for target in base_task.xcom_target:
                 if "storage_sas" in base_task.xcom_target[target]:
                     return_value = json.dumps(base_task.xcom_target[target]["storage_sas"])
-        
+        """
+
         """
         Return some data to be passed via xcom so that downstream tasks can work on the items. 
         """
@@ -146,6 +161,9 @@ class Tasks:
         - The data passed from the previous task via xcom
         """
         base_task = BaseTask(context)
+        base_task.summarize()
+
+        """
         print("Configuration from DAG:")
         pprint( base_task.configuration.to_json())
 
@@ -154,6 +172,7 @@ class Tasks:
 
         if len(base_task.xcom_target):
             print("XCOM Target = ", json.dumps(base_task.xcom_target))
+        """
 
         """
         Returns nothing because this the end of the line...

@@ -22,6 +22,7 @@ class ConfigurationConstants:
     COGSRCH_INDEX = "cog_search_index"
     COGSRCH_DATA_SRC = "cog_search_datasource"
     COGSRCH_DATA_SRC_CTR = "cog_search_datasource_container"
+    COGSRCH_DATA_SRC_FLD = "cog_search_datasource_folder"
 
     # File used to pass context parameters to virtual env operators
     DEPLOYMENT_PARAMS_FILE = "params_file"
@@ -33,6 +34,13 @@ class ConfigurationConstants:
     TASK_INSTANCE = "task_instance"
     TASK_PARAMS = "params"
 
+    # XCOM data passed
+    UPLOAD_TARGET = "upload_target"
+
+    # Execution Config Parameters
+    SYSTEM_FILE_ID = "file_id" # Testing is blob name
+    SYSTEM_PARTITION_ID = "partition_id" # Testiong is container
+    SYSTEM_FILE_KIND = "kind" # Tsting is account
 
 
 class AirflowContextConfiguration:
@@ -44,6 +52,12 @@ class AirflowContextConfiguration:
         if ConfigurationConstants.TASK_PARAMS in context:
             for param in context[ConfigurationConstants.TASK_PARAMS]:
                 setattr(self, param, context[ConfigurationConstants.TASK_PARAMS][param])
+
+    def has_attribute(self, attribute_name):
+        return attribute_name in self.__dict__
+
+    def get_attribute(self, attribute_name):
+        return self.__dict__[attribute_name]
 
     def to_json(self, additional:dict = None):
         return_value = None
