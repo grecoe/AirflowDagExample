@@ -1,6 +1,7 @@
 import time
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
+import json
 
 class CogSearchStorageDetails:
     def __init__(self):
@@ -65,6 +66,54 @@ class CogSearchDataSourceUtils:
                 return_result.folder_path = container["query"]
 
         return return_result
+
+class CogSearchRestUtils:
+
+    """
+    https://docs.microsoft.com/en-us/rest/api/searchservice/search-documents
+        POST https://[service name].search.windows.net/indexes/[index name]/docs/search?api-version=[api-version]  
+            Content-Type: application/json  
+            api-key: [admin or query key]    
+    """
+    SEARCH_DOCS_URI = "https://{}.search.windows.net/indexes/{}/docs/search?api-version={}"
+
+    def __init__(self, cog_srch_instance: str, index_name:str):
+        self.cog_srch_instance = cog_srch_instance
+        self.cog_srch_index = index_name
+
+    def find_file(self, file_name:str, api_key:str, api_version:str ):
+
+        search_uri = CogSearchRestUtils.SEARCH_DOCS_URI.format(
+            self.cog_srch_instance,
+            self.cog_srch_index,
+            api_version
+        )
+
+        headers = {
+            "Content-Type" : "application/json",
+            "api-key" : api_key
+        }
+
+        data = {  
+            "search": file_name,  
+            "searchMode" : "all",
+            "searchFields": "metadata_storage_name",  
+            "select": "*"  
+        } 
+
+
+        return_data = None
+        response = requests.post(search_uri, headers=headers, json=data)
+        if response.status_code == 200:
+            result_data = response.json()
+
+            if isinstance(result_data, dict):
+                print("Response was a dictionary")
+                return_data = result_data
+            elif isinstance(result_data, list):
+                return_data = result_data[0]
+        
+        return return_data
 
 class CogSearchIndexerUtils:
     """ Running an indexer

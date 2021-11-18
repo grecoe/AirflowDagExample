@@ -40,6 +40,7 @@ class ConfigurationConstants:
     COGSRCH_DATA_SRC_CTR = "cog_search_datasource_container"
     COGSRCH_DATA_SRC_FLD = "cog_search_datasource_folder"
     COGSRCH_INDEXER_PROC_CNT = "cog_search_indexer_proc_count"
+    COGSRCH_RESULT_CONTENT = "cog_search_result_record"
 
     # Execution Config Parameters
     SYSTEM_FILE_ID = "file_id" # Testing is blob name

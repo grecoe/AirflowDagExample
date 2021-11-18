@@ -1,6 +1,6 @@
 from aiinfraexample.utils import ConfigurationConstants
 from aiinfraexample.utils.task.basetasks import BaseTask
-from aiinfraexample.utils.search.cogsrchutil import CogSearchDataSourceUtils, CogSearchIndexerUtils
+from aiinfraexample.utils.search.cogsrchutil import CogSearchDataSourceUtils, CogSearchIndexerUtils, CogSearchRestUtils
 from pprint import pprint
 
 class CogSearchTask:
@@ -71,14 +71,50 @@ class CogSearchTask:
         cog_search_inst = base_task.sideload_settings[ConfigurationConstants.COGSRCH_INSTANCE] 
         cog_search_indexer  = base_task.sideload_settings[ConfigurationConstants.COGSRCH_INDEXER]
 
-        print("Key", api_key)
-        print(api_version)
-        print(cog_search_inst)
-        print(cog_search_indexer)
-
         indexer_utils = CogSearchIndexerUtils(cog_search_inst, cog_search_indexer)
         print("Trigger and wait on indexer")
 
         processed_items = indexer_utils.start_and_monitor_indexer(api_key, api_version)
         print("Indexer finished with", processed_items, "items processed")
         return {ConfigurationConstants.COGSRCH_INDEXER_PROC_CNT : processed_items}
+
+
+    @staticmethod
+    def retrieve_results(**context):
+        print("In datasource trigger results")
+
+        """
+        Create a BaseTask object that will parse the context and provide simple access to
+        - The deployment information from the JSON file
+        - The execution parameters passed to the DAG
+        - The data passed from the previous task via xcom
+        """
+        base_task = BaseTask(context)
+        base_task.summarize()
+
+        api_key = base_task.find_xcom_target(ConfigurationConstants.COGSRCH_ADMIN_KEY)
+        imported_file = None
+
+        if base_task.configuration.has_attribute(ConfigurationConstants.SYSTEM_FILE_ID):
+            imported_file = base_task.configuration.get_attribute(ConfigurationConstants.SYSTEM_FILE_ID)
+
+        if not api_key or \
+            not imported_file or\
+            ConfigurationConstants.COGSRCH_API_VERSION not in base_task.sideload_settings or \
+            ConfigurationConstants.COGSRCH_INSTANCE not in base_task.sideload_settings or \
+            ConfigurationConstants.COGSRCH_INDEXER not in base_task.sideload_settings:
+            raise Exception("Data indexer  information is incomplete")
+        
+        api_version = base_task.sideload_settings[ConfigurationConstants.COGSRCH_API_VERSION]
+        cog_search_inst = base_task.sideload_settings[ConfigurationConstants.COGSRCH_INSTANCE] 
+        cog_search_index  = base_task.sideload_settings[ConfigurationConstants.COGSRCH_INDEX]
+
+
+        search_utils = CogSearchRestUtils(cog_search_inst, cog_search_index)
+        print("Attempting to retrieve result")
+
+        processed_item = search_utils.find_file(imported_file, api_key, api_version)
+
+        print("Found item", processed_item is not None)
+
+        return { ConfigurationConstants.COGSRCH_RESULT_CONTENT : processed_item }
